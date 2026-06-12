@@ -1,0 +1,36 @@
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# CMake / build
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+*.cmake
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Logs
+*.log
+ai_online_log.jsonl
+
+# Generated data
+data/games/*.jsonl
+data/games/*.csv
+rag/indexes/
+
+# Model checkpoints
+*.pt
+!models/gomoku_policy.pt
+*.pth
+*.ckpt
