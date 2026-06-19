@@ -109,8 +109,6 @@ def is_strong_threat_after(board, r, c, who):
     board[r][c]=EMPTY
     return len(o3) >= 3
 
-# ---------------- Heuristic ----------------
-# 模式分（可按口味调整）
 SCORES = {
     "FIVE":     1000000,
     "OPEN4":     50000,
@@ -125,7 +123,6 @@ def line_score(vals, who):
     opp = BLACK if who==WHITE else WHITE
     n=len(vals); s=0
 
-    # 快速五连
     cnt=0
     for x in vals:
         cnt = cnt+1 if x==who else 0
@@ -324,12 +321,7 @@ def find_best_move(board, who, time_limit_ms=800, max_depth=6):
     return best
 
 def main_loop():
-    """
-    从 stdin 收到 Qt 发来的 JSON：
-      {"board": [[...]], "player": "white" 或 "black"}
-    用 A* 算出一步 (r,c) 返回给 Qt，
-    同时把 (局面, 当前执子方, 落子坐标) 追加写入 LOG_PATH。
-    """
+
     global ZOBRIST
     for line in sys.stdin:
         s = line.strip()
@@ -337,37 +329,35 @@ def main_loop():
             continue
         try:
             req = json.loads(s)
-            board  = req["board"]                  # 2D 列表
-            player = req.get("player", "white")    # "white" / "black"
+            board  = req["board"]                  
+            player = req.get("player", "white")    
             N = len(board)
 
-            # 确保 ZOBRIST 初始化
             if ZOBRIST is None or len(ZOBRIST) != N:
                 globals()["ZOBRIST"] = _zobrist_init(N)
                 TTEntry.clear()
 
             who = WHITE if player == "white" else BLACK
 
-            # 用 A* / minimax 算一步
             r, c = find_best_move(board, who, time_limit_ms=5000, max_depth=20)
 
-            # ===== 写日志：这一步 AI 思考前的棋盘 + AI 落子 =====
+            
             try:
                 rec = {
-                    "board": board,        # 当前完整棋盘（人刚下完，轮到 AI）
-                    "player": player,      # "white" / "black"（AI 的颜色）
-                    "who": int(who),       # 1 / 2（和 ai_stdin 里的 BLACK/WHITE 一致）
+                    "board": board,        
+                    "player": player,      
+                    "who": int(who),       
                     "row": int(r),
                     "col": int(c),
-                    "source": "astar",     # 标记来源是 A*
+                    "source": "astar",     
                 }
                 with open(LOG_PATH, "a", encoding="utf-8") as f:
                     f.write(json.dumps(rec, ensure_ascii=False) + "\n")
             except Exception:
-                # 日志写失败不影响对弈
+                
                 pass
 
-            # 把结果回给 Qt
+            
             sys.stdout.write(json.dumps({"row": int(r), "col": int(c)}) + "\n")
             sys.stdout.flush()
 
