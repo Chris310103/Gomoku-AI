@@ -1,7 +1,7 @@
 from gomoku_ai.common.board import EMPTY, can_win_points, legal_moves, opponent
 from gomoku_ai.search.heuristics import heuristic, order_moves
 
-def minimax(board, depth: int, current_player: int, ai_player: int):
+def minimax(board, depth: int, current_player: int, ai_player: int, alpha: float, beta: float):
     # 1. If search reaches the depth limit, evaluate the board.
     if depth == 0:
         return heuristic(board, ai_player), None
@@ -36,6 +36,8 @@ def minimax(board, depth: int, current_player: int, ai_player: int):
                 depth - 1,
                 next_player,
                 ai_player,
+                alpha,
+                beta,
             )
 
             board[row][col] = EMPTY
@@ -43,6 +45,11 @@ def minimax(board, depth: int, current_player: int, ai_player: int):
             if score > best_score:
                 best_score = score
                 best_move = (row, col)
+
+            alpha = max(alpha, best_score)
+
+            if alpha >= beta:
+                break
 
         return best_score, best_move
 
@@ -59,6 +66,8 @@ def minimax(board, depth: int, current_player: int, ai_player: int):
                 depth - 1,
                 next_player,
                 ai_player,
+                alpha,
+                beta,
             )
 
             board[row][col] = EMPTY
@@ -66,6 +75,11 @@ def minimax(board, depth: int, current_player: int, ai_player: int):
             if score < best_score:
                 best_score = score
                 best_move = (row, col)
+
+            beta = min(beta, best_score)
+
+            if alpha >= beta:
+                break
 
         return best_score, best_move
 
@@ -87,6 +101,8 @@ def find_best_move(board, player: int, depth: int=2):
         depth=depth,
         current_player=player,
         ai_player=player,
+        alpha=float("-inf"),
+        beta=float("inf")
     )
 
     if best_move is None:
