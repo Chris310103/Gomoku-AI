@@ -91,21 +91,28 @@ def order_moves(board, moves, player:int):
     blocking_moves = set(can_win_points(board, opp))
 
     def center_bias(row:int, col:int) -> float:
-        center = board_size / 3
+        center = board_size / 2
         return -((row - center)**2 + (col - center)**2)
     
-    def nearby_stone_count(row: int, col: int) -> int:
-        count = 0
+    def nearby_stone_counts(row: int, col: int, player: int):
+        own_count = 0
+        opponent_count = 0
+        opp = opponent(player)
 
         for dr in range(-2, 3):
             for dc in range(-2, 3):
                 nr = row + dr
                 nc = col + dc
 
-                if in_bounds(board_size, nr, nc) and board[nr][nc] != EMPTY:
-                    count += 1
+                if not in_bounds(board_size, nr, nc):
+                    continue
 
-        return count
+                if board[nr][nc] == player:
+                    own_count += 1
+                elif board[nr][nc] == opp:
+                    opponent_count += 1
+
+        return own_count, opponent_count
 
     def move_key(move):
         row, col = move
@@ -117,9 +124,18 @@ def order_moves(board, moves, player:int):
         else:
             priority = 1
 
+        own_count, opponent_count = nearby_stone_counts(
+            row,
+            col,
+            player,
+        )
+
+        total_density = own_count + opponent_count
+
         return (
             priority,
-            nearby_stone_count(row, col),
+            total_density,
+            max(own_count, opponent_count),
             center_bias(row, col),
         )
 
