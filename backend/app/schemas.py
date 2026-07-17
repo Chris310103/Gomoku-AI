@@ -25,6 +25,14 @@ class RecommendRequest(BaseModel):
         return board
 
 
-class MoveResponse(BaseModel):
+class MoveCoordinates(BaseModel):
     row: int
     col: int
+
+
+class RecommendResponse(BaseModel):
+    move: MoveCoordinates
+    player: Literal["black", "white"]
+    engine: Literal["minimax_alpha_beta"]
+    depth: int
+    evaluation_score: int

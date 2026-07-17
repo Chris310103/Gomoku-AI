@@ -1,6 +1,19 @@
 from gomoku_ai.common.board import EMPTY, can_win_points, legal_moves, opponent
 from gomoku_ai.search.heuristics import heuristic, order_moves
 
+WIN_SCORE = 1_000_000
+
+def evaluate_candidate_move(board, player: int, move: tuple[int, int]) -> int:
+    row, col = move
+    board[row][col] = player
+
+    try:
+        score = heuristic(board, player)
+    finally:
+        board[row][col] = EMPTY
+
+    return score
+
 def minimax(board, depth: int, current_player: int, ai_player: int, alpha: float, beta: float):
     # 1. If search reaches the depth limit, evaluate the board.
     if depth == 0:
@@ -82,32 +95,66 @@ def minimax(board, depth: int, current_player: int, ai_player: int, alpha: float
                 break
 
         return best_score, best_move
+    
+def find_best_move_with_score(
+    board,
+    player: int,
+    depth: int = 2,
+) -> tuple[int, tuple[int, int]]:
 
-def find_best_move(board, player: int, depth: int=2):
-    # 1. If the current player can win immediately, take that move.
     winning_moves = can_win_points(board, player)
-    if winning_moves:
-        return winning_moves[0]
 
-    # 2. If the opponent can win immediately, block it.
+    if winning_moves:
+        move = winning_moves[0]
+        return WIN_SCORE + depth, move
+
     opp = opponent(player)
     blocking_moves = can_win_points(board, opp)
-    if blocking_moves:
-        return blocking_moves[0]
 
-     # 3. Otherwise, use minimax search.
-    _, best_move = minimax(
+    if blocking_moves:
+        move = blocking_moves[0]
+        score = evaluate_candidate_move(board, player, move)
+        return score, move
+
+    score, best_move = minimax(
         board=board,
         depth=depth,
         current_player=player,
         ai_player=player,
         alpha=float("-inf"),
-        beta=float("inf")
+        beta=float("inf"),
     )
 
     if best_move is None:
-        moves = order_moves(board, legal_moves(board), player)
-        return moves[0] if moves else (0, 0)
+        moves = order_moves(
+            board,
+            legal_moves(board),
+            player,
+        )
 
-    return best_move
+        if not moves:
+            raise ValueError("No legal moves available")
+
+        best_move = moves[0]
+        score = evaluate_candidate_move(
+            board,
+            player,
+            best_move,
+        )
+
+    return int(score), best_move
+
+def find_best_move(
+    board,
+    player: int,
+    depth: int = 2,
+) -> tuple[int, int]:
+    _, move = find_best_move_with_score(
+        board=board,
+        player=player,
+        depth=depth,
+    )
+
+    return move
+
 

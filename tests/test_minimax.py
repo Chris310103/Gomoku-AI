@@ -2,7 +2,11 @@ from copy import deepcopy
 
 from gomoku_ai.common.board import BLACK, WHITE, EMPTY, legal_moves
 from gomoku_ai.search.heuristics import heuristic
-from gomoku_ai.search.minimax import find_best_move, minimax
+from gomoku_ai.search.minimax import (
+    find_best_move,
+    find_best_move_with_score,
+    minimax,
+)
 
 
 def empty_board(size: int = 15):
@@ -81,3 +85,40 @@ def test_minimax_depth_zero_uses_heuristic():
 
     assert score == expected_score
     assert move is None
+    
+
+def test_find_best_move_with_score_returns_winning_score():
+    board = empty_board()
+
+    board[7][4] = BLACK
+    board[7][5] = BLACK
+    board[7][6] = BLACK
+    board[7][7] = BLACK
+
+    score, move = find_best_move_with_score(
+        board,
+        BLACK,
+        depth=2,
+    )
+
+    assert move in {
+        (7, 3),
+        (7, 8),
+    }
+    assert score >= 1_000_000
+
+
+def test_find_best_move_with_score_returns_legal_move():
+    board = empty_board()
+
+    board[7][7] = BLACK
+    board[7][8] = WHITE
+
+    score, move = find_best_move_with_score(
+        board,
+        BLACK,
+        depth=2,
+    )
+
+    assert isinstance(score, int)
+    assert move in legal_moves(board)

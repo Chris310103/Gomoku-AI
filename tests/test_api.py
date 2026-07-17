@@ -38,8 +38,8 @@ def test_recommend_returns_legal_move():
     assert response.status_code == 200
 
     data = response.json()
-    row = data["row"]
-    col = data["col"]
+    row = data["move"]["row"]
+    col = data["move"]["col"]
 
     assert 0 <= row < 15
     assert 0 <= col < 15
@@ -67,10 +67,13 @@ def test_recommend_takes_immediate_win():
 
     data = response.json()
 
-    assert (data["row"], data["col"]) in {
-        (7, 3),
-        (7, 8),
-    }
+    assert (
+            data["move"]["row"],
+            data["move"]["col"],
+        ) in {
+            (7, 3),
+            (7, 8),
+        }
 
 
 def test_recommend_rejects_invalid_player():
@@ -117,3 +120,26 @@ def test_recommend_rejects_excessive_depth():
     )
 
     assert response.status_code == 422
+
+def test_recommend_returns_search_metadata():
+    board = empty_board()
+    board[7][7] = BLACK
+    board[7][8] = WHITE
+
+    response = client.post(
+        "/recommend",
+        json={
+            "board": board,
+            "player": "black",
+            "depth": 2,
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["player"] == "black"
+    assert data["engine"] == "minimax_alpha_beta"
+    assert data["depth"] == 2
+    assert isinstance(data["evaluation_score"], int)
